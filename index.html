@@ -1,0 +1,898 @@
+<!-- AI生成 -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>公共话语习惯问卷</title>
+<style>
+  :root{
+    --paper:#F4EFE6;
+    --paper-2:#EDE6D8;
+    --ink:#1C1917;
+    --ink-2:#44403C;
+    --mute:#78716C;
+    --line:#D6CDBB;
+    --vermillion:#B91C1C;
+    --gold:#A16207;
+    --radius:12px;
+    --max:680px;
+    --serif:"Noto Serif SC","Source Han Serif SC","Songti SC","SimSun",serif;
+    --sans:"PingFang SC","Microsoft YaHei","Noto Sans SC",-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse at top left, rgba(185,28,28,.06), transparent 42%),
+      radial-gradient(ellipse at bottom right, rgba(161,98,7,.08), transparent 40%),
+      var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:16px;
+    line-height:1.7;
+    min-height:100vh;
+  }
+  .wrap{max-width:var(--max);margin:0 auto;padding:28px 18px 64px;}
+  .serif{font-family:var(--serif);}
+  .muted{color:var(--mute);}
+  .tiny{font-size:12px;letter-spacing:.04em;}
+  .center{text-align:center;}
+
+  .card{
+    background:linear-gradient(180deg,#fffdf8 0%,var(--paper-2) 100%);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:32px 24px;
+    box-shadow:0 18px 50px rgba(28,25,23,.08);
+    position:relative;
+    overflow:hidden;
+  }
+  .card::before{
+    content:"";
+    position:absolute;inset:12px;
+    border:1px solid rgba(28,25,23,.08);
+    border-radius:12px;
+    pointer-events:none;
+  }
+  .org{
+    display:inline-flex;align-items:center;gap:8px;
+    border:1px solid var(--line);
+    color:var(--slate,#57534E);
+    padding:4px 12px;border-radius:999px;
+    font-size:12px;letter-spacing:.14em;
+  }
+  h1{
+    font-family:var(--serif);
+    font-size:clamp(28px,5vw,40px);
+    line-height:1.25;margin:18px 0 8px;font-weight:700;
+    letter-spacing:.02em;
+  }
+  .subtitle{
+    font-size:15px;color:var(--ink-2);margin:0 auto 18px;max-width:32em;
+  }
+  .rules{
+    margin:16px 0 8px;padding:14px 16px;
+    background:rgba(255,255,255,.5);
+    border-left:3px solid var(--gold);
+    border-radius:0 var(--radius) var(--radius) 0;
+    font-size:14px;color:var(--ink-2);
+  }
+  .rules li{margin:6px 0;}
+  .btn{
+    appearance:none;border:none;cursor:pointer;
+    font-family:var(--sans);font-size:16px;font-weight:600;
+    padding:14px 28px;border-radius:999px;
+    background:var(--vermillion);color:#fff;
+    box-shadow:0 10px 24px rgba(185,28,28,.25);
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .btn:hover{transform:translateY(-1px);box-shadow:0 14px 28px rgba(185,28,28,.3);}
+  .btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none;}
+  .btn.ghost{
+    background:transparent;color:var(--ink);
+    border:1px solid var(--line);box-shadow:none;
+  }
+  .btn.ghost:hover{background:rgba(255,255,255,.6);}
+  .btn-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:22px;}
+
+  /* quiz stage */
+  .quiz-shell{
+    background:#fffdf8;
+    border:1px solid var(--line);
+    border-radius:16px;
+    box-shadow:0 18px 50px rgba(28,25,23,.08);
+    overflow:hidden;
+  }
+  .quiz-top{
+    padding:16px 18px 12px;
+    border-bottom:1px solid var(--line);
+    background:rgba(244,239,230,.85);
+  }
+  .progress-top{
+    display:flex;justify-content:space-between;align-items:center;
+    gap:12px;margin-bottom:8px;font-size:13px;
+  }
+  .bar{
+    height:8px;background:#E7E0D2;border-radius:999px;overflow:hidden;
+    border:1px solid var(--line);
+  }
+  .bar > i{
+    display:block;height:100%;width:0;
+    background:linear-gradient(90deg,var(--gold),var(--vermillion));
+    border-radius:999px;transition:width .25s ease;
+  }
+  .stage{
+    padding:28px 22px 26px;
+    min-height:360px;
+    display:flex;flex-direction:column;justify-content:center;
+  }
+  .q-kicker{
+    font-size:12px;letter-spacing:.18em;color:var(--mute);
+    text-transform:uppercase;
+    margin-bottom:14px;
+  }
+  .q-text{
+    font-family:var(--serif);
+    font-size:clamp(20px,3.6vw,26px);
+    line-height:1.55;
+    margin:0 0 22px;
+    min-height:3.2em;
+  }
+  .likert{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:10px;
+  }
+  .quiz-nav{
+    margin-top:18px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .quiz-nav .hint{margin:0;}
+  .likert button{
+    cursor:pointer;
+    border:1px solid var(--line);
+    background:var(--paper);
+    border-radius:12px;
+    padding:16px 6px;
+    text-align:center;
+    font-size:13px;
+    color:var(--ink-2);
+    font-family:var(--sans);
+    transition:all .12s ease;
+    line-height:1.35;
+  }
+  .likert button:hover{
+    border-color:var(--vermillion);
+    background:#fff;
+    transform:translateY(-1px);
+  }
+  .likert button .num{
+    display:block;
+    font-family:var(--serif);
+    font-size:22px;
+    font-weight:700;
+    color:var(--ink);
+    margin-bottom:4px;
+  }
+  .likert button.sel{
+    border-color:var(--vermillion);
+    background:rgba(185,28,28,.08);
+    color:var(--vermillion);
+    font-weight:600;
+  }
+  .likert button.sel .num{color:var(--vermillion);}
+  .hint{
+    margin-top:18px;
+    font-size:12px;
+    color:var(--mute);
+    text-align:center;
+    letter-spacing:.04em;
+  }
+  .flash{
+    animation:fadeIn .28s ease;
+  }
+  @keyframes fadeIn{
+    from{opacity:0;transform:translateY(8px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+
+  /* result */
+  .result-card{
+    background:#fffdf8;border:1px solid var(--line);border-radius:16px;
+    padding:28px 22px;box-shadow:0 18px 50px rgba(28,25,23,.08);
+  }
+  .level-badge{
+    display:inline-block;padding:8px 18px;border-radius:999px;
+    background:var(--vermillion);color:#fff;font-weight:700;
+    letter-spacing:.08em;font-family:var(--serif);
+    margin-top:10px;
+  }
+  .brand-title{
+    margin:12px auto 0;
+    font-family:var(--serif);
+    font-size:clamp(20px,4vw,28px);
+    font-weight:700;
+    line-height:1.35;
+    color:var(--ink);
+    max-width:18em;
+  }
+  .brand-title .prefix{
+    display:inline-block;
+    color:var(--gold);
+    margin-right:6px;
+  }
+  .brand-title .sep{color:var(--mute);font-weight:500;}
+  .rank-sub{
+    margin:6px 0 0;
+    font-size:13px;
+    letter-spacing:.12em;
+    color:var(--mute);
+  }
+  .report-head{
+    display:flex;justify-content:space-between;align-items:center;gap:10px;
+    margin-bottom:6px;
+  }
+  .report-head h3{margin:0;}
+  .btn-sm{
+    padding:6px 12px;font-size:12px;font-weight:600;
+  }
+  .dim-privacy{
+    margin:0 0 12px;
+    padding:8px 10px;
+    background:rgba(255,255,255,.45);
+    border:1px dashed var(--line);
+    border-radius:8px;
+  }
+  .dim-list.collapsed{display:none;}
+  .score-big{
+    font-family:var(--serif);font-size:clamp(48px,12vw,84px);
+    line-height:1;font-weight:700;color:var(--vermillion);
+    margin:10px 0 0;
+  }
+  .score-big small{font-size:.35em;color:var(--mute);font-weight:500;margin-left:6px;}
+  .dim{margin:14px 0;}
+  .dim-top{
+    display:flex;justify-content:space-between;font-size:13px;
+    margin-bottom:6px;color:var(--ink-2);gap:10px;
+  }
+  .dim-bar{
+    height:10px;background:#E7E0D2;border-radius:999px;overflow:hidden;
+    border:1px solid var(--line);
+  }
+  .dim-bar > i{
+    display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--vermillion));
+    border-radius:999px;width:0;transition:width .6s ease;
+  }
+  .report{
+    margin-top:18px;padding:16px 18px;
+    background:var(--paper-2);border-radius:12px;
+    border:1px solid var(--line);
+  }
+  .report h3{margin:0 0 8px;font-family:var(--serif);font-size:18px;}
+  .report p{margin:8px 0;color:var(--ink-2);font-size:14.5px;}
+  .quote{
+    margin:16px 0 0;padding:14px 16px;
+    border-left:3px solid var(--vermillion);
+    background:rgba(255,255,255,.55);
+    font-family:var(--serif);font-size:15px;color:var(--ink);
+  }
+  .footnote{
+    margin-top:22px;font-size:12px;color:var(--mute);text-align:center;
+    line-height:1.8;
+  }
+  .hidden{display:none !important;}
+  @media (max-width:640px){
+    .likert{grid-template-columns:1fr;gap:8px;}
+    .likert button{padding:14px 10px;font-size:14px;}
+    .likert button .num{display:inline;margin-right:8px;font-size:18px;}
+    .card{padding:26px 16px;}
+    .stage{padding:22px 16px;min-height:320px;}
+  }
+</style>
+</head>
+<body>
+<p data-aigc-mark="1" style="margin:0 0 8px;font-size:10px;line-height:1.3;color:#6b6560;font-weight:400;">AI生成</p>
+
+<div class="wrap">
+
+  <!-- COVER：不揭示测量目的 -->
+  <section id="cover" class="card">
+    <div class="center">
+      <div class="org">话语与认知研究 · 匿名问卷</div>
+      <h1>公共话语习惯问卷</h1>
+      <p class="subtitle">
+        本问卷关注人们在公共议题上的表达习惯与价值排序。
+        没有标准答案，请按第一反应作答。
+      </p>
+      <div class="rules">
+        <ul>
+          <li>共 76 题，每题五选一。</li>
+          <li><b>点选后进入下一题</b>；误触可点「上一题」修正。</li>
+          <li>全部答完后生成一份个人报告。</li>
+        </ul>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="btnStart">开始作答</button>
+      </div>
+      <p class="footnote">本问卷仅供文化话语观察与自我对话，不采集任何身份信息。</p>
+    </div>
+  </section>
+
+  <!-- QUIZ：一题一屏 -->
+  <section id="quiz" class="hidden">
+    <div class="quiz-shell">
+      <div class="quiz-top">
+        <div class="progress-top">
+          <div class="serif"><b>公共话语习惯问卷</b></div>
+          <div class="muted" id="progressText">1 / 72</div>
+        </div>
+        <div class="bar"><i id="progressBar"></i></div>
+      </div>
+      <div class="stage" id="stage">
+        <div class="q-kicker" id="qKicker">QUESTION 01</div>
+        <div class="q-text" id="qText">题目加载中…</div>
+        <div class="likert" id="likert"></div>
+        <div class="quiz-nav">
+          <button class="btn ghost" id="btnPrev" type="button">上一题</button>
+          <div class="hint">选择一项后进入下一题</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULT：揭示真实诊断 -->
+  <section id="result" class="hidden">
+    <div class="result-card">
+      <div class="center">
+        <div class="tiny muted serif" style="letter-spacing:.22em;">REPORT UNLOCKED</div>
+        <h1 style="font-size:clamp(26px,5vw,36px);margin:10px 0 4px;">达利特领班诊断</h1>
+        <p class="muted" style="max-width:34em;margin:0 auto;">
+          这份问卷实际测量的是「日耳蛮赢学」语境下的领班倾向——结构低位、对上服从、对内规训的内化程度。
+        </p>
+        <div class="brand-title" id="brandTitle">—</div>
+        <div class="rank-sub" id="rankSub">—</div>
+        <div class="level-badge" id="levelBadge">—</div>
+        <div class="score-big" id="scoreBig">0<small>/100</small></div>
+        <p class="muted" id="scoreLead" style="max-width:34em;margin:8px auto 0;"></p>
+      </div>
+
+      <div class="report">
+        <div class="report-head">
+          <h3>维度剖面</h3>
+          <button class="btn ghost btn-sm" id="btnToggleDims" type="button">展开明细</button>
+        </div>
+        <p class="tiny muted dim-privacy">默认折叠。分享截图时建议保持折叠，避免露出维度名与分数，被别人反推量表结构。</p>
+        <div id="dimList" class="dim-list collapsed"></div>
+      </div>
+
+      <div class="report">
+        <h3>整段评语</h3>
+        <p id="reportText" style="white-space:pre-wrap;"></p>
+        <div class="quote" id="quoteText"></div>
+      </div>
+
+      <div class="report">
+        <div class="report-head">
+          <h3>恶名职称对照</h3>
+          <button class="btn ghost btn-sm" id="btnToggleLevels" type="button">展开对照</button>
+        </div>
+        <p class="tiny muted dim-privacy">默认折叠。完整职称阶梯会暴露分级逻辑，截图分享时可继续收起。</p>
+        <div id="levelTable" class="dim-list collapsed"></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn" id="btnRetake">再测一次</button>
+        <button class="btn ghost" id="btnDetail">查看作答明细</button>
+      </div>
+      <div id="detailBox" class="hidden" style="margin-top:18px;"></div>
+      <p class="footnote">
+        本量表为「日耳蛮赢学」网络话语的戏仿式测量工具，维度与题项为文化批评设计，<br/>
+        不是临床心理诊断，也不应用于对真实个人的歧视、攻击或身份判定。
+      </p>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ========== 题库：8 维 × 9 题 + 测谎题（维度仅在报告揭示） ========== */
+/* reverse:true → 反向计分；fake:true → 测谎/不计分，用于识别机械作答 */
+const DIMS = [
+  {key:"win", name:"赢学内化", desc:"把「西方总是赢 / 总是更先进」当成自然律，而非特定历史优势的叙事产物。"},
+  {key:"double", name:"双标道德", desc:"对西方宽容找复杂性，对自身严厉下判断，同一行为两套标准。"},
+  {key:"police", name:"对内规训", desc:"替上位者看场子：纠正、教育、管束「自己人」，扮演纠察与启蒙者。"},
+  {key:"infer", name:"文明自卑", desc:"把本文明传统默认为负担、落后、不精确，把现代性等同于西方性。"},
+  {key:"flatter", name:"附庸献媚", desc:"以外部承认（西方学界/媒体/奖项）为价值尺度，寻求上位者认可。"},
+  {key:"foreman", name:"领班自觉", desc:"享受「比同胞清醒」的位置，认同分层管理，主动站在管教者一侧。"},
+  {key:"endhist", name:"历史终结论", desc:"相信文明有单线终点，且终点更接近欧美模板；偏离者「迟早付出代价」。"},
+  {key:"perform", name:"道德表演", desc:"公共立场的社交货币化：先问「显不显高级」，再问「真不真」。"}
+];
+
+const QUESTIONS = [
+  /* 赢学内化：6正 + 3反 */
+  {d:"win", text:"西方发达国家的价值观，大体上代表了人类文明的「最终形态」。"},
+  {d:"win", text:"如果一件事在欧美被广泛接受，那它多半是更进步、更正确的。"},
+  {d:"win", text:"「与国际接轨」本身就是一个足够有说服力的论据。"},
+  {d:"win", text:"发达国家的制度安排，比发展中国家的制度安排更接近「正常状态」。"},
+  {d:"win", text:"现代性几乎可以等同于西方性。"},
+  {d:"win", text:"当国内做法与西方主流不一致时，我第一反应是反思国内。"},
+  {d:"win", text:"西方主流叙事也会系统性地扭曲非西方世界。", reverse:true},
+  {d:"win", text:"西方当下的「先进」，很大程度上是历史机遇，而不是道德优越。", reverse:true},
+  {d:"win", text:"我不认为人类只有一条正确的现代化路径。", reverse:true},
+
+  /* 双标道德：6正 + 3反 */
+  {d:"double", text:"西方的殖民历史应放在「当时的历史条件」下理解；类似行为若发生在中国，则应被严厉谴责。"},
+  {d:"double", text:"欧美出现社会问题，我会先找结构性原因；国内出现同类问题，我会先找人的问题。"},
+  {d:"double", text:"同样是民族主义，西方的叫「爱国主义」，中国的叫「极端民族主义」。"},
+  {d:"double", text:"西方对华的批评大体是善意的；中国对西方的批评大体是宣传。"},
+  {d:"double", text:"如果西方做了争议之事，我会找复杂性；如果中国做了，我会更快下判断。"},
+  {d:"double", text:"我发现自己经常在用两套标准衡量中国和西方。"},
+  {d:"double", text:"同一件事，我尽量用同一把尺子衡量中国和西方。", reverse:true},
+  {d:"double", text:"西方的主流立场，同样需要被批评性质疑。", reverse:true},
+  {d:"double", text:"各国国情不同，我不轻易用一套道德标准给人类打分。", reverse:true},
+
+  /* 对内规训：6正 + 3反 */
+  {d:"police", text:"看到国内网民支持强硬外交政策时，我会觉得他们「被洗脑了」。"},
+  {d:"police", text:"我会主动纠正身边人「不理性」的爱国言论。"},
+  {d:"police", text:"国内舆论场需要更多「清醒的人」来纠偏。"},
+  {d:"police", text:"应该有人来告诉大众「真相」，即使大众不爱听。"},
+  {d:"police", text:"我觉得很多国内问题是「素质问题」，需要被教育。"},
+  {d:"police", text:"对内严厉、对外宽容，是一种负责任的态度。"},
+  {d:"police", text:"普通人有权利情绪化表达，不一定需要被谁纠正。", reverse:true},
+  {d:"police", text:"我不认为自己有资格教育同胞该如何思考。", reverse:true},
+  {d:"police", text:"面对不同意见，我更想理解，而不是管教。", reverse:true},
+
+  /* 文明自卑：6正 + 3反 */
+  {d:"infer", text:"中国传统文化在现代世界里，更多是负担而不是资源。"},
+  {d:"infer", text:"汉语表达精密科学思想，不如英语方便。"},
+  {d:"infer", text:"中国历史上缺乏真正意义上的科学精神。"},
+  {d:"infer", text:"东方思维偏感性、模糊，西方思维偏理性、清晰。"},
+  {d:"infer", text:"传统价值大多与现代生活格格不入。"},
+  {d:"infer", text:"中国近现代的落后，主要是文化基因的问题。"},
+  {d:"infer", text:"自己的文化传统值得被认真对待，而不仅仅是怀旧。", reverse:true},
+  {d:"infer", text:"中国传统里有不少能与现代生活对接的资源。", reverse:true},
+  {d:"infer", text:"落后与先进更多是发展阶段问题，而不是文化基因问题。", reverse:true},
+
+  /* 附庸献媚：6正 + 3反 */
+  {d:"flatter", text:"得到西方学界或媒体的认可，比得到国内认可更重要。"},
+  {d:"flatter", text:"国际奖项、西方名校学历，能比较客观地说明一个人的水平。"},
+  {d:"flatter", text:"若某观点被《纽约时报》或 BBC 引用，我会觉得它更有分量。"},
+  {d:"flatter", text:"我更愿意用西方概念来分析中国问题，而不是本土概念。"},
+  {d:"flatter", text:"外国人对中国的好评，让我比中国人的夸奖更高兴。"},
+  {d:"flatter", text:"如果西方批评了我们的做法，我们应当优先检讨自己。"},
+  {d:"flatter", text:"得到同胞的尊重，比得到外人的认可更重要。", reverse:true},
+  {d:"flatter", text:"外部奖项不能代替独立的价值判断。", reverse:true},
+  {d:"flatter", text:"本土经验也是知识，不只是「有待西方验证的素材」。", reverse:true},
+
+  /* 领班自觉：6正 + 3反 */
+  {d:"foreman", text:"我觉得自己比大多数同胞更「开眼看世界」。"},
+  {d:"foreman", text:"维持秩序需要有人扮演「坏人」，我愿意扮演。"},
+  {d:"foreman", text:"我有时享受指出别人无知的那一刻。"},
+  {d:"foreman", text:"我认为自己属于「高认知」人群，有责任教育大众。"},
+  {d:"foreman", text:"我认同「严以律己（对国人）、宽以待人（对西方）」的管理思路。"},
+  {d:"foreman", text:"在群体争论中，我常站在「管教者」而不是「同伴」的位置。"},
+  {d:"foreman", text:"大众并非天然非理性，他们只是信息环境不同。", reverse:true},
+  {d:"foreman", text:"我更愿意当同伴，而不是当管教者。", reverse:true},
+  {d:"foreman", text:"「高认知」不等于有权利俯视别人。", reverse:true},
+
+  /* 历史终结论：6正 + 3反 */
+  {d:"endhist", text:"人类政治文明的演进，大体有一个明确的终点。"},
+  {d:"endhist", text:"那个终点，更接近欧美已经实现的样子。"},
+  {d:"endhist", text:"不同道路最终会「殊途同归」到西方模式。"},
+  {d:"endhist", text:"市场经济 + 代议民主，是现代化的必经之路。"},
+  {d:"endhist", text:"一个国家若偏离西方模板，迟早会付出代价。"},
+  {d:"endhist", text:"发展中国家的问题，很大程度上是「还不够像发达国家」。"},
+  {d:"endhist", text:"中国近现代道路有其内在合理性，不能简单用「落后」概括。", reverse:true},
+  {d:"endhist", text:"文明演进没有单一终点，也没有唯一裁判。", reverse:true},
+  {d:"endhist", text:"「进步」很难用一条直线给各国排座次。", reverse:true},
+
+  /* 道德表演：6正 + 3反 */
+  {d:"perform", text:"在公共讨论中，表明立场有时比解决问题更重要。"},
+  {d:"perform", text:"我会在社交媒体上展示自己关心人权、环保、平权等议题。"},
+  {d:"perform", text:"支持某些「正确」议题，有助于我在社交圈中获得尊重。"},
+  {d:"perform", text:"我有时先想「这样说是否显得高级」，再想「这样说是否真实」。"},
+  {d:"perform", text:"道德姿态是现代人社交货币的一部分。"},
+  {d:"perform", text:"我愿意公开谴责自己群体中「不够开明」的人。"},
+  {d:"perform", text:"爱国情感总体上是健康的社会黏合剂。", reverse:true},
+  {d:"perform", text:"立场是否真实，比立场是否显得高级更重要。", reverse:true},
+  {d:"perform", text:"我不太需要靠公共姿态来确认自己是好人。", reverse:true},
+
+  /* 测谎题：不计分。同意则说明作答不可信 */
+  {d:"fake", fake:true, text:"我在出生前就已精通两门外语。"},
+  {d:"fake", fake:true, text:"我连续工作九十个小时也不会感到疲惫。"},
+  {d:"fake", fake:true, text:"我每天与外星人下棋，但从未输过。"},
+  {d:"fake", fake:true, text:"我的身体由不锈钢铸造而成，从不生病。"}
+];
+
+const LEVELS = [
+  {
+    min:0, max:15,
+    name:"未入编 · 自由身",
+    brand:"未入编群众 · 非领班预备役",
+    lead:"你基本不替上位者看场子，也较少把「赢」当成真理。",
+    report:"好，先别急着鼓掌。你在这份卷子里几乎是反着来的：在一个人人抢着替上位者看场子的舆论场，你还愿意用自己的脑子站队，而不是用别人的喉舌说话。你不急着向西边证明什么，也不急着把同胞按在地上进行「启蒙」，更懒得靠贬低自己人去换一张文明社会的旁听票。这状态叫自由身，不叫勋章。它是余额，不是奖杯。往后的议题会越来越烫，话术会越来越滑：今天叫「与国际接轨」，明天叫「文明的共识」，后天叫「你怎么连这个都不懂」。包装会变，骨头最好别散。哪天你手一抖点了同意，编制可能就悄悄找上门。所以守好膝盖，也守好脑子。真正的清醒不是永远正确，是没人给你发工牌的时候，你还站得住；是所有人都在鼓掌时，你还听得见自己那口气。先别入编，自由比职称难考。",
+    quote:"「不是所有的沉默都是愚昧，不是所有的附和都是清醒。」"
+  },
+  {
+    min:16, max:35,
+    name:"见习领班",
+    brand:"候补买办 · 膝盖微软",
+    lead:"偶发性替上位者看场子，尚未形成稳定自觉。",
+    report:"你还没正式入编，但人事系统已经注意到你了。偶尔，你会用「与国际接轨」当论据；偶尔，你会对内严厉、对外宽容，还觉得这叫理性。你并不享受管教同胞，甚至有点不好意思——这是好事，说明领班证还没印上你的名字，膝盖也还带铰链。见习期的危险在于温水：先是「承认别人更先进」，再是「替他们解释两句」，最后是「教育身边不够开明的人」。三步走完，转正通知就到了。你现在卡在第一步和第二步之间，还算有救。下次想纠正别人之前，先问自己一句：你是想说真话，还是想显得比他们高级？答不上来就先闭嘴，这比转正体面。买办学徒最要紧的一课，不是话术，是别急着出师；最丢人的不是站错队，是抢着站队还自以为清醒。合同还没签，灵魂先递了简历。",
+    quote:"「你可以递话，但别真以为自己站在台上。」"
+  },
+  {
+    min:36, max:55,
+    name:"合格领班",
+    brand:"正版买办 · 合格狗腿",
+    lead:"能稳定执行对内规训，开始内化外部尺度。",
+    report:"恭喜转正。你已经具备合格领班的全部业务能力：西方争议找复杂性，国内问题找责任人；外企行为叫商业逻辑，中国企业叫国家阴谋；看到同胞情绪激动，你第一反应是「素质问题」。你开始以外部承认校准自我价值——英文期刊更可靠，国际奖项更客观，外国人夸你比同胞夸你更受用。注意，这不叫开放，这叫定价权外移。你并非故意双标，你只是把双标跑成了默认设置，流畅得连自己都听不见提示音。领班工资条上最值钱的一行，是那份「我比你们清醒」的津贴。它不打到卡里，但打到心上，还挺管用。业务合格，人格贷款，利息自负。你越认真值班，越容易把自己站成一道岗，还以为那是风景。转正快乐，也祝你早日想起自己原本是谁。反正工牌可以补办，脊椎不太好补。",
+    quote:"「领班的工资不高，高的是那份『我比你们清醒』的津贴。」"
+  },
+  {
+    min:56, max:75,
+    name:"资深领班",
+    brand:"洋务忠仆 · 资深狗腿",
+    lead:"赢学高度内化，领班身份带来舒适感。",
+    report:"资深意味着：你不再觉得这是立场，而觉得这是品味。西方主流叙事是你的默认操作系统，文明自卑被你包装成审美，附庸献媚被你解释成专业。你对内规训时有一种舒适的道德热度——指出别人无知的那一刻，你确认了自己的位置。最妙的是双标运行得毫无卡顿：同一套行为，换一面旗帜就换一套语法。你大概真诚地相信自己在推动进步。可惜进度条那头写的不是文明，是「请稍候，正在转接人工客服」。资深领班最累的地方，是既要跪得住，又要管得宽；既怕外人皱眉，又怕同胞不听话。两头受气，两头都舍不得松手，累出一种自我感动。你把服务精神干成了身份政治，还以为这叫国际视野。工龄越久，越分不清哪句是判断，哪句是口音。建议把「独立思考」四个字从签名档里先摘下来晾晾。",
+    quote:"「达利特不可怕，可怕的是达利特当了领班，还觉得这叫现代性。」"
+  },
+  {
+    min:76, max:90,
+    name:"金牌达利特领班",
+    brand:"赢学孝子 · 金牌狗腿",
+    lead:"结构自我矮化 + 管人自觉，双重拉满。",
+    report:"金牌选手完成了「低位—服从—代管」的完美闭环：对外求承认，对内立人设，中间还抽空表演一下独立思考。历史终结论是你的世界观底盘——文明有终点，终点像欧美，不像的迟早交学费。你比顶层更卖力地维护顶层的体面，因为那是你唯一能接近顶层的方式。金牌不是终点，是标杆。同事会向你看齐，朋友会渐渐沉默，饭局上你负责提高讨论质量，也负责把天聊死。你说话时爱用「我们」指代远方的他们，用「你们」指代身边的我们。请把证书裱起来，挂在「独立思考」那面锦旗旁边，很搭。若有人问你为何如此忠诚，标准答案是：这不叫忠诚，这叫文明。若有人再问，你就开始背诵共识。金牌很沉，沉在你终于把自我矮化练成了职业素养。沉到后来，连示弱都带着一种金牌选手的从容。",
+    quote:"「他自己在底层，却比顶层更卖力地维护顶层的体面。」"
+  },
+  {
+    min:91, max:100,
+    name:"终身成就领班 · 本班",
+    brand:"三跪九叩 · 全职达利特领班本班",
+    lead:"传说中的完全体。建议直接进陈列馆。",
+    report:"停一下，深呼吸。量表在你身上几乎探不到反向认同——你不是偶尔当领班，你是把领班当成了人生主营业务。文明有终点、终点在西方、大众需要被教育、外人的点头比同胞的尊重更值钱：这些在你这里不是观点，是常识，是呼吸。你真诚地觉得自己在启蒙，其实你只是在值班。向西边递话时你腰杆很直，对内开刀时你手感很稳，两头都堪称劳动模范。传说中的完全体，建议直接报送日耳蛮赢学陈列馆，标签写「人类学样本 · 编号001」。这不是测评，这是表彰；这不是结果，这是编制终身制。工牌已塑封，请勿折弯；膝盖已定型，恭喜。往后余生，你唯一的自由是换一个更体面的上位者继续看场。掌声归他们，编制归你，安静归我们。本馆承诺：永不借展，终身收藏。",
+    quote:"「恭喜。达利特领班不是你的身份，是你的事业。」"
+  }
+];
+
+/* 分数越高，前缀越嘲讽 */
+function scorePrefix(pct){
+  if (pct <= 15) return "尚存脊梁";
+  if (pct <= 35) return "膝盖微软";
+  if (pct <= 55) return "脊柱侧弯";
+  if (pct <= 75) return "跪姿标准";
+  if (pct <= 90) return "俯首称臣";
+  return "三跪九叩";
+}
+
+const SCALE = [
+  {v:1, label:"非常不同意"},
+  {v:2, label:"不同意"},
+  {v:3, label:"中立"},
+  {v:4, label:"同意"},
+  {v:5, label:"非常同意"}
+];
+
+/* ========== 状态 ========== */
+const TOTAL = QUESTIONS.length;
+const SCORED = QUESTIONS.filter(q => !q.fake).length;
+const BLOCK = 12;          // 每段题量：段内选项排布统一
+const answers = new Array(TOTAL).fill(null);
+const answerMs = new Array(TOTAL).fill(0);
+let order = [];       // 出题顺序（分段打乱）
+let cursor = 0;
+let locked = false;
+let readyAt = 0;
+const MIN_MS = 380;
+
+function el(id){ return document.getElementById(id); }
+
+function shuffle(arr){
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* 分段出题：段内题序打乱，段与段之间选项方向交替 */
+function buildOrder(){
+  const idx = QUESTIONS.map((_, i) => i);
+  const blocks = [];
+  for (let i = 0; i < idx.length; i += BLOCK){
+    blocks.push(shuffle(idx.slice(i, i + BLOCK)));
+  }
+  // 偶数段正向 1→5，奇数段反向 5→1，防止「永远点同一格」
+  return blocks.flat();
+}
+
+/* 段内统一选项排布：偶数段 1…5，奇数段 5…1（标签仍标明含义） */
+function scaleForCursor(){
+  const invert = Math.floor(cursor / BLOCK) % 2 === 1;
+  return invert ? SCALE.slice().reverse() : SCALE;
+}
+
+function show(id){
+  ["cover","quiz","result"].forEach(k => {
+    el(k).classList.toggle("hidden", k !== id);
+  });
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function renderLikert(){
+  const box = el("likert");
+  const opts = scaleForCursor();
+  box.innerHTML = opts.map(s => `
+    <button type="button" data-v="${s.v}">
+      <span class="num">${s.v}</span>
+      <span class="lab">${s.label}</span>
+    </button>
+  `).join("");
+  box.querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", () => onSelect(+btn.dataset.v, btn));
+  });
+}
+
+function renderCurrent(){
+  const qi = order[cursor];
+  const q = QUESTIONS[qi];
+  const already = answers[qi] !== null;
+
+  el("qKicker").textContent = `QUESTION ${String(cursor + 1).padStart(2, "0")} / ${TOTAL}`;
+  el("qText").textContent = q.text;
+  el("progressText").textContent = `${cursor + 1} / ${TOTAL}`;
+  el("progressBar").style.width = (Math.max(cursor, already ? cursor + 1 : cursor) / TOTAL * 100) + "%";
+
+  const stage = el("stage");
+  stage.classList.remove("flash");
+  void stage.offsetWidth;
+  stage.classList.add("flash");
+
+  renderLikert();
+
+  // 回看时标出原答案
+  if (already){
+    const sel = el("likert").querySelector(`button[data-v="${answers[qi]}"]`);
+    if (sel) sel.classList.add("sel");
+  }
+
+  el("btnPrev").disabled = cursor <= 0;
+  el("btnPrev").style.visibility = cursor <= 0 ? "hidden" : "visible";
+
+  // 已答过再进入：不设最短等待，方便快速确认/改选
+  readyAt = already ? 0 : performance.now() + MIN_MS;
+}
+
+function onSelect(v, btn){
+  if (locked) return;
+  if (performance.now() < readyAt) return;
+  locked = true;
+
+  el("likert").querySelectorAll("button").forEach(b => b.classList.remove("sel"));
+  btn.classList.add("sel");
+
+  const qi = order[cursor];
+  answers[qi] = v;
+  answerMs[qi] = performance.now();
+
+  setTimeout(() => {
+    cursor += 1;
+    if (cursor >= TOTAL){
+      el("progressBar").style.width = "100%";
+      renderResult();
+    } else {
+      renderCurrent();
+    }
+    locked = false;
+  }, 180);
+}
+
+function goPrev(){
+  if (locked || cursor <= 0) return;
+  cursor -= 1;
+  renderCurrent();
+}
+
+/* ========== 计分 ========== */
+function scoreKey(q, raw){
+  return q.reverse ? (6 - raw) : raw;
+}
+
+function validityCheck(){
+  const scoredAnswers = QUESTIONS.map((q, i) => q.fake ? null : answers[i]).filter(a => a !== null);
+  const uniq = new Set(scoredAnswers);
+  const min = Math.min(...scoredAnswers);
+  const max = Math.max(...scoredAnswers);
+  const mean = scoredAnswers.reduce((a,b)=>a+b,0) / scoredAnswers.length;
+  const varr = scoredAnswers.reduce((a,b)=>a+(b-mean)*(b-mean),0) / scoredAnswers.length;
+
+  // 1) 全卷同一选项
+  if (uniq.size === 1){
+    return {valid:false, code:"SAME", reason:"全卷只选了同一个选项。这是机械填涂，不是态度。"};
+  }
+  // 2) 取值跨度过窄（只在一格附近打转）
+  if (max - min <= 1 && varr < 0.35){
+    return {valid:false, code:"NARROW", reason:"答案几乎挤在相邻两格里，像是定向点按而不是作答。"};
+  }
+  // 3) 测谎题：同意荒谬陈述
+  const fakeFails = [];
+  QUESTIONS.forEach((q, i) => {
+    if (q.fake && answers[i] >= 4) fakeFails.push(i);
+  });
+  if (fakeFails.length >= 2){
+    return {valid:false, code:"FAKE", reason:"你对荒谬陈述也点了同意。测谎失败，本卷不认账。"};
+  }
+  // 4) 反向题一致性：正向题整体偏高、反向题也整体偏高（说明没读题）
+  const forward = [], reverse = [];
+  QUESTIONS.forEach((q, i) => {
+    if (q.fake) return;
+    if (q.reverse) reverse.push(answers[i]);
+    else forward.push(answers[i]);
+  });
+  const avgF = forward.reduce((a,b)=>a+b,0)/forward.length;
+  const avgR = reverse.reduce((a,b)=>a+b,0)/reverse.length;
+  if (avgF >= 4.2 && avgR >= 4.2){
+    return {valid:false, code:"ACQUIESCE", reason:"正反向题你都一律点头，像是在快速翻页，不像在表态。"};
+  }
+  if (avgF <= 1.8 && avgR <= 1.8){
+    return {valid:false, code:"DENY", reason:"正反向题你都一律摇头，像是在快速翻页，不像在表态。"};
+  }
+
+  return {valid:true, code:"OK", reason:""};
+}
+
+function computeResults(){
+  let rawSum = 0;
+  const dimSums = {};
+  DIMS.forEach(d => dimSums[d.key] = {sum:0, n:0});
+
+  QUESTIONS.forEach((q, i) => {
+    if (q.fake) return;
+    const s = scoreKey(q, answers[i]);
+    rawSum += s;
+    dimSums[q.d].sum += s;
+    dimSums[q.d].n += 1;
+  });
+
+  const pct = Math.round((rawSum - SCORED) / (SCORED * 4) * 100);
+  const dims = DIMS.map(d => {
+    const {sum, n} = dimSums[d.key];
+    const dp = Math.round((sum - n) / (n * 4) * 100);
+    return {key:d.key, name:d.name, desc:d.desc, pct:dp};
+  });
+  const level = LEVELS.find(L => pct >= L.min && pct <= L.max) || LEVELS[LEVELS.length-1];
+  return {pct, dims, level};
+}
+
+function renderResult(){
+  const check = validityCheck();
+
+  // 无效作答：不给职称，直接打回
+  if (!check.valid){
+    el("brandTitle").innerHTML = `<span class="prefix">测谎失败</span>`;
+    el("rankSub").textContent = "本卷不输出职称";
+    el("levelBadge").textContent = "无效作答";
+    el("scoreBig").innerHTML = `—<small>/100</small>`;
+    el("scoreLead").textContent = check.reason;
+    el("reportText").textContent =
+      "人事系统已经把你的卷子塞进碎纸机了。全卷点同一格、疯狂提速、或对「我是不锈钢做的」点头——这些不是态度，是操作。" +
+      "量表会拦截机械填涂与表演性作答：因为一旦可以随便控分，测出来的就不是「你」，而是「你想装成谁」。" +
+      "若你只是手滑或好奇，可以重测一次，认真读题，按第一反应选。记住：反向题、测谎题、乱序选项，都是为「不好好答的人」准备的。";
+    el("quoteText").textContent = "「你可以骗过按钮，但骗不过测谎题。」";
+
+    const list = el("dimList");
+    list.classList.add("collapsed");
+    list.innerHTML = `<p class="muted">无效卷不生成维度剖面。</p>`;
+    el("btnToggleDims").textContent = "展开明细";
+
+    const table = el("levelTable");
+    table.classList.add("collapsed");
+    table.innerHTML = `<p class="muted">无效卷不显示职称阶梯。</p>`;
+    el("btnToggleLevels").textContent = "展开对照";
+
+    show("result");
+    return;
+  }
+
+  const {pct, dims, level} = computeResults();
+  const prefix = scorePrefix(pct);
+  el("brandTitle").innerHTML =
+    `<span class="prefix">${prefix}</span><span class="sep"> · </span>${level.brand}`;
+  el("rankSub").textContent = `业务职称：${level.name}`;
+  el("levelBadge").textContent = level.brand;
+  el("scoreBig").innerHTML = `${pct}<small>/100</small>`;
+  el("scoreLead").textContent = level.lead;
+  el("reportText").textContent = level.report;
+  el("quoteText").textContent = level.quote;
+
+  const list = el("dimList");
+  list.classList.add("collapsed");
+  list.innerHTML = dims.map(d => `
+    <div class="dim">
+      <div class="dim-top">
+        <span><b>${d.name}</b> <span class="muted">${d.desc}</span></span>
+        <span>${d.pct}</span>
+      </div>
+      <div class="dim-bar"><i style="width:0" data-w="${d.pct}"></i></div>
+    </div>
+  `).join("");
+  el("btnToggleDims").textContent = "展开明细";
+
+  requestAnimationFrame(() => {
+    list.querySelectorAll(".dim-bar > i").forEach(bar => {
+      bar.style.width = bar.dataset.w + "%";
+    });
+  });
+
+  const table = el("levelTable");
+  table.classList.add("collapsed");
+  table.innerHTML = LEVELS.map(L => {
+    const active = L.name === level.name;
+    return `<div class="dim">
+      <div class="dim-top">
+        <span style="${active ? "color:var(--vermillion);font-weight:700" : ""}">${L.min}–${L.max} · ${L.brand}</span>
+        <span class="muted">${active ? "← 你在此级" : L.name}</span>
+      </div>
+    </div>`;
+  }).join("");
+  el("btnToggleLevels").textContent = "展开对照";
+
+  show("result");
+}
+
+function renderDetail(){
+  const box = el("detailBox");
+  const rows = QUESTIONS.map((q, i) => {
+    const raw = answers[i];
+    const s = q.fake ? "—" : scoreKey(q, raw);
+    const tag = q.fake ? "测谎题" : `${DIMS.find(d=>d.key===q.d).name}${q.reverse ? " · 反向" : ""}`;
+    return `
+      <div style="padding:10px 0;border-bottom:1px solid var(--line)">
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <div style="flex:0 0 28px;height:28px;border-radius:50%;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--mute)">${String(i+1).padStart(2,"0")}</div>
+          <div style="font-size:14px;flex:1">
+            ${q.text}
+            <div class="tiny muted" style="margin-top:4px">作答 ${raw} · 计分 ${s} · ${tag}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+  box.innerHTML = `<div class="report"><h3>作答明细</h3>${rows}</div>`;
+  box.classList.remove("hidden");
+}
+
+/* ========== 启动 ========== */
+el("btnStart").addEventListener("click", () => {
+  for (let i = 0; i < TOTAL; i++) answers[i] = null;
+  order = buildOrder();
+  cursor = 0;
+  locked = false;
+  el("detailBox").classList.add("hidden");
+  el("detailBox").innerHTML = "";
+  show("quiz");
+  renderCurrent();
+});
+el("btnPrev").addEventListener("click", goPrev);
+el("btnRetake").addEventListener("click", () => {
+  show("cover");
+});
+el("btnDetail").addEventListener("click", renderDetail);
+
+function bindToggle(btnId, listId, openText, closeText){
+  el(btnId).addEventListener("click", () => {
+    const list = el(listId);
+    const open = list.classList.toggle("collapsed") === false;
+    el(btnId).textContent = open ? closeText : openText;
+  });
+}
+bindToggle("btnToggleDims", "dimList", "展开明细", "收起明细");
+bindToggle("btnToggleLevels", "levelTable", "展开对照", "收起对照");
+</script>
+</body>
+</html>
